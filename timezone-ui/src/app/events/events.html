@@ -1,0 +1,14 @@
+<h3>Timezone Demo</h3>
+
+<div style="margin-bottom:12px;">
+  <button (click)="createNow()">Save “now”</button>
+</div>
+
+<ul>
+  <li *ngFor="let e of events" style="margin-bottom:10px;">
+    <strong>{{ e.title }}</strong><br>
+    UTC: <code>{{ e.utc }}</code><br>
+    Sydney: {{ e.sydney }} (Australia/Sydney)<br>
+    You: {{ e.local }} ({{ userZone }})
+  </li>
+</ul>

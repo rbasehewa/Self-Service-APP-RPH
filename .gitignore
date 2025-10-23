@@ -1,0 +1,24 @@
+# --- Angular (timezone-ui)
+timezone-ui/node_modules/
+timezone-ui/dist/
+timezone-ui/.angular/
+timezone-ui/.tmp/
+timezone-ui/coverage/
+timezone-ui/*.log
+timezone-ui/.env
+
+# --- .NET (TimezoneApi)
+TimezoneApi/bin/
+TimezoneApi/obj/
+TimezoneApi/.vs/
+TimezoneApi/*.user
+TimezoneApi/*.suo
+TimezoneApi/appsettings.Development.json
+# If appsettings.json has secrets, ignore it too:
+# TimezoneApi/appsettings.json
+
+# --- Global/editor junk
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
