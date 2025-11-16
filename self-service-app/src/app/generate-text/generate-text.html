@@ -1,0 +1,36 @@
+<div class="container">
+  <h2>AI Text Generator</h2>
+  
+  <form #textForm="ngForm" (ngSubmit)="generateResponse()" class="form">
+    <div class="input-group">
+      <label for="prompt">Enter your prompt:</label>
+      <textarea 
+        id="prompt"
+        name="prompt"
+        [(ngModel)]="prompt"
+        required
+        placeholder="Type your prompt here..."
+        rows="4"
+        class="textarea">
+      </textarea>
+    </div>
+    
+    <button 
+      type="submit" 
+      [disabled]="!textForm.form.valid"
+      class="submit-btn">
+      Generate Response
+    </button>
+  </form>
+  
+  @let response = generatedResponse();
+  
+  <div class="response-section">
+      <h3>Response:</h3>
+      <div 
+          [class.response-box]="response.error === null"
+          [class.error-box]="response.error !== null">
+          {{ response.text || (response.error ? 'Error generating text' : 'Awaiting prompt...') }}
+      </div>
+  </div>
+</div>
