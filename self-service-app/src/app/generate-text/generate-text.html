@@ -1,54 +1,40 @@
-<div class="container">
-  <h2>AI Text Generator</h2>
-  
-  <form #textForm="ngForm" (ngSubmit)="generateResponse()" class="form">
-    <div class="input-group">
-      <label for="prompt">Enter your prompt:</label>
-      <textarea 
-        id="prompt"
-        name="prompt"
-        [ngModel]="prompt()"
-        (ngModelChange)="prompt.set($event)"
-        required
-        placeholder="Type your prompt here..."
-        rows="4"
-        class="textarea">
-      </textarea>
+<form #textForm="ngForm" class="form">
+  <div class="input-group">
+    <label for="prompt">Enter your prompt:</label>
+    <textarea
+      id="prompt"
+      name="prompt"
+      [ngModel]="prompt()"
+      (ngModelChange)="prompt.set($event)"
+      required
+      placeholder="Type your prompt here..."
+      rows="4"
+      class="textarea">
+    </textarea>
+  </div>
 
-    </div>
-    
-    <button 
-      type="submit" 
-      [disabled]="!textForm.form.valid"
-      class="submit-btn">
-      Generate Response
-    </button>
-  </form>
-  
+  <!-- For text/HTML generation -->
+  <button
+    type="button"
+    [disabled]="!textForm.form.valid"
+    (click)="generateResponse()"
+    class="submit-btn">
+    Generate Text
+  </button>
+
+  <!-- For dataset questions -->
+  <button
+    type="button"
+    [disabled]="!textForm.form.valid"
+    (click)="queryUsers()"
+    class="submit-btn">
+    Query Users JSON
+  </button>
+</form>
+
 @let response = generatedResponse();
 
 <div class="response-section">
   <h3>Response:</h3>
-
-  <div 
-    [class.response-box]="response.error === null"
-    [class.error-box]="response.error !== null">
-
-    <!-- Error state -->
-    <ng-container *ngIf="response.error; else showHtml">
-      Error generating text
-    </ng-container>
-
-    <!-- HTML-rendered response -->
-    <ng-template #showHtml>
-      <div
-        class="response-content"
-        [innerHTML]="response.text || 'Awaiting prompt...'">
-      </div>
-    </ng-template>
-
-  </div>
-</div>
-
-
+  <pre>{{ response.text || (response.error ? 'Error' : 'Awaiting prompt...') }}</pre>
 </div>

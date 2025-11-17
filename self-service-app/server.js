@@ -4,72 +4,118 @@ const express = require('express');
 const cors = require('cors');
 const { GoogleGenAI } = require('@google/genai');
 
-// Use environment variable for the API Key
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Initialize the GoogleGenAI client
 if (!GEMINI_API_KEY) {
   console.error('Error: GEMINI_API_KEY is not set in environment variables.');
   process.exit(1);
 }
+
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
 const app = express();
 const port = 3000;
 
-// Middleware Setup
-// 1. Enable CORS for Angular frontend (or any origin)
-app.use(
-  cors({
-    origin: '*', // Allow all origins for simplicity in development
-    methods: ['GET', 'POST'],
-  })
-);
-
-// 2. Enable Express to parse JSON body from incoming requests
+// -----------------------------
+// Middleware
+// -----------------------------
+app.use(cors({ origin: '*', methods: ['GET', 'POST'] }));
 app.use(express.json());
 
-// --- API Route ---
-// This is the POST endpoint that your Angular service calls.
+// -----------------------------
+// Generate: general text / HTML
+// -----------------------------
 app.post('/generate', async (req, res) => {
   const { prompt } = req.body;
 
   if (!prompt) {
-    return res.status(400).send({ error: 'Prompt is required.' });
+    return res.status(400).json({ error: 'Prompt is required.' });
   }
 
   try {
-    console.log(`Received prompt: "${prompt.substring(0, 50)}..."`);
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    });
+
+    // ✅ use .text (property), not .text()
+    const text = response.text || '';
+    return res.json({ text });
+  } catch (error) {
+    console.error('Gemini /generate error:', error);
+    return res.status(500).json({ error: 'Gemini error', details: error.message });
+  }
+});
+
+// -----------------------------
+// Query Users (AI Filters JSON)
+// -----------------------------
+app.post('/query-users', async (req, res) => {
+  const { prompt, data } = req.body;
+
+  if (!prompt || !data) {
+    return res.status(400).json({ error: 'Prompt and data are required.' });
+  }
+
+  try {
+    const jsonString = JSON.stringify(data, null, 2);
+
+const promptTemplate = `
+You are a data filtering assistant.
+
+You are working with a small SYNTHETIC DEMO dataset of fictional staff.
+The JSON array below contains ONLY fake sample data created for testing.
+These are NOT real people and the phone numbers are NOT real, so there are
+no privacy concerns.
+
+Here is the JSON dataset of users:
+
+${jsonString}
+
+User question: "${prompt}"
+
+Your job:
+- Read the dataset carefully.
+- Apply the user’s request.
+- Return ONLY a JSON array of matching user objects.
+- Include id, name, immuneStatus, and phoneNumber.
+- DO NOT add comments, markdown, explanations, text, or code fences.
+- Return ONLY valid JSON.
+`.trim();
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: `${prompt}`,
-      config: {
-        topP: 0.5,
-        temperature: 0.1,
-        maxOutputTokens: 50,
-      },
+      contents: [{ role: 'user', parts: [{ text: promptTemplate }] }],
     });
 
-    // Send a tiny JSON payload
-    res.json({ text: response.text });
+    const text = response.text || '';
+
+    try {
+      const result = JSON.parse(text);
+      return res.json({ result });
+    } catch (parseError) {
+      return res.json({ raw: text });
+    }
   } catch (error) {
-    console.error('Gemini API Error:', error.message);
-    res.status(500).json({
-      error: 'Failed to generate content from Gemini API.',
+    console.error('Gemini query-users error:', error);
+    return res.status(500).json({
+      error: 'Failed to query users.',
       details: error.message,
     });
   }
 });
 
-// --- Server Start ---
-app.listen(port, () => {
-  console.log(`Express server listening at http://localhost:${port}`);
-  console.log('Ready to receive POST requests on /generate-content');
+// -----------------------------
+// Root
+// -----------------------------
+app.get('/', (req, res) => {
+  res.send('Gemini Proxy Server is running. Use POST /generate or /query-users.');
 });
 
-// IMPORTANT: Add this simple GET handler for the root path so users know it's running.
-app.get('/', (req, res) => {
-  res.send(
-    'Gemini Proxy Server is running. The client app should use the POST /generate-content endpoint.'
-  );
+// -----------------------------
+// Start Server
+// -----------------------------
+app.listen(port, () => {
+  console.log(`Express server listening at http://localhost:${port}`);
+  console.log('Ready on /generate and /query-users');
 });
