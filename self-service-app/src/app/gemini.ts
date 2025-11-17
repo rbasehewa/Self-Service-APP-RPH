@@ -5,13 +5,7 @@ import { map } from 'rxjs/operators'; // Needed for the map operator
 
 // Define the shape of the raw response object we get from the backend proxy.
 export type GeminiResponse = {
-  candidates: {
-    content: {
-      parts: {
-        text: string;
-      }[];
-    };
-  }[];
+  text: string;
 };
 
 // The URL for our Express server (The proxy)
@@ -30,9 +24,8 @@ export class Gemini {
    * @returns An observable of just the generated text string.
    */
   generateContent(prompt: string) {
-    return this.#http.post<GeminiResponse>(`http://localhost:3000/generate`, { prompt }).pipe(
-      // Map the complex response object down to just the text!
-      map((response) => response.candidates[0]?.content.parts[0].text || 'No response')
+    return this.#http.post<GeminiResponse>(`${API_URL}/generate`, { prompt }).pipe(
+      map((response) => response.text || 'No response')
     );
   }
 }

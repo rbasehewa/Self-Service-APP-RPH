@@ -7,12 +7,14 @@
       <textarea 
         id="prompt"
         name="prompt"
-        [(ngModel)]="prompt"
+        [ngModel]="prompt()"
+        (ngModelChange)="prompt.set($event)"
         required
         placeholder="Type your prompt here..."
         rows="4"
         class="textarea">
       </textarea>
+
     </div>
     
     <button 
@@ -23,14 +25,30 @@
     </button>
   </form>
   
-  @let response = generatedResponse();
-  
-  <div class="response-section">
-      <h3>Response:</h3>
-      <div 
-          [class.response-box]="response.error === null"
-          [class.error-box]="response.error !== null">
-          {{ response.text || (response.error ? 'Error generating text' : 'Awaiting prompt...') }}
+@let response = generatedResponse();
+
+<div class="response-section">
+  <h3>Response:</h3>
+
+  <div 
+    [class.response-box]="response.error === null"
+    [class.error-box]="response.error !== null">
+
+    <!-- Error state -->
+    <ng-container *ngIf="response.error; else showHtml">
+      Error generating text
+    </ng-container>
+
+    <!-- HTML-rendered response -->
+    <ng-template #showHtml>
+      <div
+        class="response-content"
+        [innerHTML]="response.text || 'Awaiting prompt...'">
       </div>
+    </ng-template>
+
   </div>
+</div>
+
+
 </div>

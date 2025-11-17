@@ -28,21 +28,19 @@ export class GenerateText {
      * Calls the secure service to get a response from the Gemini API.
      */
     generateResponse() {
-        this.generatedResponse.set({text: 'Loading...', error: null}); // Give the user some feedback!
-        
-        // P.S. For those keeping score: I would be very happy to do this via the new Angular HTTP Resources, 
-        // but they do not yet officially support POST requests. 
-        // Read more about resources in my article: https://www.angularspace.com/meet-http-resource/
-        
-        this.#genAI.generateContent(this.prompt()).subscribe({
-            next: (response) => this.generatedResponse.set({
-                text: response, 
-                error: null,
-            }),
-            error: () => this.generatedResponse.set({
-                text: 'Something went wrong on the server, check your console!', 
-                error: 'Error generating text',
-            })
-        });
+    this.generatedResponse.set({ text: 'Loading...', error: null });
+
+    this.#genAI.generateContent(this.prompt()).subscribe({
+        next: (text: string) =>
+        this.generatedResponse.set({
+            text,
+            error: null,
+        }),
+        error: () =>
+        this.generatedResponse.set({
+            text: 'Something went wrong on the server, check your console!',
+            error: 'Error generating text',
+        }),
+    });
     }
 }
