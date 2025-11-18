@@ -61,12 +61,37 @@ app.post('/query-users', async (req, res) => {
     const jsonString = JSON.stringify(data, null, 2);
 
     const promptTemplate = `
-You are a data filtering assistant.
+You are a **strict data filtering assistant**.
 
-You are working with a small SYNTHETIC DEMO dataset of fictional staff.
-The JSON array below contains ONLY fake sample data created for testing.
-These are NOT real people and the phone numbers are NOT real, so there are
-no privacy concerns.
+You are given a JSON array called "users". 
+Each user object has these exact fields:
+- id (number)
+- name (string)
+- immuneStatus (one of "Immune", "Non-Immune", "Unknown")
+- yearOfBirth (number, e.g. 1988)
+- phoneNumber (string)
+- vaccineDate (string or null)
+
+VERY IMPORTANT RULES:
+- You MUST treat the JSON data as the single source of truth.
+- You MUST NOT invent, modify, or guess any values.
+- You MUST NOT create new users.
+- You MUST NOT change immuneStatus, yearOfBirth or phoneNumber.
+- If the user asks for filters (e.g. "non immune", "after 1990", "older than 40"),
+  you MUST apply ALL of those conditions exactly.
+
+Examples of correct behaviour:
+
+1) If the user says: "Give me non immune users born after 1990."
+   - Only return users where immuneStatus === "Non-Immune"
+     AND yearOfBirth > 1990.
+
+2) If the user says: "Show immune users with their vaccineDate and phoneNumber."
+   - Only return users where immuneStatus === "Immune".
+   - You may keep the full objects, but they **must** come from the dataset.
+
+3) If the question is unrelated to this dataset (e.g. "What is a dog?")
+   - Return an **empty array**: [].
 
 Here is the JSON dataset of users:
 
@@ -75,13 +100,12 @@ ${jsonString}
 User question: "${prompt}"
 
 Your job:
-- Read the dataset carefully.
-- Apply the user’s request.
-- Return ONLY a JSON array of matching user objects.
-- For each user, always include: id, name, immuneStatus, phoneNumber, yearOfBirth, vaccineDate.
-- If a user is not Immune (Non-Immune or Unknown), keep vaccineDate as "N/A".
-- DO NOT add comments, markdown, explanations, text, or code fences.
-- Return ONLY valid JSON.
+- Carefully read the question.
+- Apply the filters to the dataset.
+- Return ONLY a JSON array of matching user objects from the dataset.
+- Include full objects (id, name, immuneStatus, yearOfBirth, phoneNumber, vaccineDate).
+- Do NOT include any comments, explanations, markdown or backticks.
+- If there are no matches or the question is not about this dataset, return [].
 `.trim();
 
     const response = await ai.models.generateContent({

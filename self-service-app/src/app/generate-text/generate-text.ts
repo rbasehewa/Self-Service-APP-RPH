@@ -25,12 +25,17 @@ export class GenerateText {
   });
 
   /**
-   * isQueryLoading:
-   *  - true while we are waiting for /query-users response
-   *  - used to show a Tailwind spinner and disable the button
+   * Loading flag:
+   *  - true while we are calling /query-users OR doing fallback /generate
+   *  - used for button spinner + (optional) table skeleton
    */
-  isQueryLoading = signal(false);
+  isLoading = signal(false);
 
+  /**
+   * LLM user result:
+   *  - empty → show full SAMPLE_USERS
+   *  - non-empty → show whatever Gemini returned
+   */
   llmUsers = signal<User[]>([]);
   // This is what your template's @for is using
   readonly exampleQueries: ExampleQuery[] = EXAMPLE_QUERIES;
@@ -50,54 +55,65 @@ export class GenerateText {
 
   generateResponse() {
     this.generatedResponse.set({ text: 'Loading...', error: null });
+    this.isLoading.set(true);
 
     this.#genAI.generateContent(this.prompt()).subscribe({
-      next: (text) =>
-        this.generatedResponse.set({
-          text,
-          error: null,
-        }),
-      error: () =>
+      next: (text) => {
+        this.generatedResponse.set({ text, error: null });
+        this.isLoading.set(false);
+      },
+      error: () => {
         this.generatedResponse.set({
           text: 'Something went wrong on the server, check your console!',
           error: 'Error generating text',
-        }),
+        });
+        this.isLoading.set(false);
+      },
     });
   }
 
   /**
-   * Calls /query-users with:
-   *  - prompt = user text
-   *  - data   = SAMPLE_USERS
+   * New “smart” handler for the single button.
    *
-   * And stores the resulting user array into llmUsers,
-   * which automatically drives tableUsers().
+   * Flow:
+   *   1) Try /query-users with the staff dataset.
+   *   2) If we get a non-empty user array → update table + show JSON in card.
+   *   3) If we get no structured users (or empty array) → fall back to a
+   *      general Gemini answer by calling generateResponse().
    */
-  queryUsers() {
-    // Start loading
-    this.isQueryLoading.set(true);
-
-    this.generatedResponse.set({ text: 'Loading users......', error: null });
+  queryUsersSmart() {
+    this.isLoading.set(true);
+    this.generatedResponse.set({ text: 'Loading...', error: null });
 
     this.#genAI.queryUsers(this.prompt(), SAMPLE_USERS).subscribe({
       next: (res) => {
-        if (res.result) {
-          // LLM returned structured JSON array of users
+        // case A: structured JSON array of users came back
+        if (res.result && res.result.length > 0) {
           this.llmUsers.set(res.result);
 
           this.generatedResponse.set({
             text: JSON.stringify(res.result, null, 2),
             error: null,
           });
-        } else {
-          // if we only got raw text, clear llmUsers
-          this.llmUsers.set([]);
 
+          this.isLoading.set(false);
+          return;
+        }
+
+        // case B: no structured users → clear table result and fall back
+        this.llmUsers.set([]);
+
+        // If there was some raw text from Gemini, show it,
+        // but we still do a proper /generate call to handle “dog” etc.
+        if (res.raw) {
           this.generatedResponse.set({
-            text: res.raw ?? 'No structured result returned.',
+            text: res.raw,
             error: null,
           });
         }
+
+        // Fallback to normal AI answer (uses the same prompt)
+        this.generateResponse(); // generateResponse will turn off isLoading
       },
       error: () => {
         this.llmUsers.set([]);
@@ -105,10 +121,7 @@ export class GenerateText {
           text: 'Something went wrong while querying users.',
           error: 'Error querying users',
         });
-      },
-      complete: () => {
-        // Stop loading regardless of success/failure
-        this.isQueryLoading.set(false);
+        this.isLoading.set(false);
       },
     });
   }
