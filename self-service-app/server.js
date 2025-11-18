@@ -38,7 +38,7 @@ app.post('/generate', async (req, res) => {
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
     });
 
-    // ✅ use .text (property), not .text()
+    // use .text (property), not .text()
     const text = response.text || '';
     return res.json({ text });
   } catch (error) {
@@ -60,7 +60,7 @@ app.post('/query-users', async (req, res) => {
   try {
     const jsonString = JSON.stringify(data, null, 2);
 
-const promptTemplate = `
+    const promptTemplate = `
 You are a data filtering assistant.
 
 You are working with a small SYNTHETIC DEMO dataset of fictional staff.
@@ -78,7 +78,8 @@ Your job:
 - Read the dataset carefully.
 - Apply the user’s request.
 - Return ONLY a JSON array of matching user objects.
-- Include id, name, immuneStatus, and phoneNumber.
+- For each user, always include: id, name, immuneStatus, phoneNumber, yearOfBirth, vaccineDate.
+- If a user is not Immune (Non-Immune or Unknown), keep vaccineDate as "N/A".
 - DO NOT add comments, markdown, explanations, text, or code fences.
 - Return ONLY valid JSON.
 `.trim();

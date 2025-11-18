@@ -1,1 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
+@use "tailwindcss";
+
+/* Debug: if this turns the page yellow, global styles are working */
+body {
+  background-color: #f4f4d0;
+}
