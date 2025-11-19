@@ -6,11 +6,14 @@ import { SAMPLE_USERS, User } from '../models/user.model';
 import { Usertable } from '../usertable/usertable';
 import { ExampleQuery } from '../models/example-query.model';
 import { EXAMPLE_QUERIES } from '../data/example-queries.data';
+import { faSearchengin } from '@fortawesome/free-brands-svg-icons';
+import { FaIconComponent } from "@fortawesome/angular-fontawesome";
+import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-generate-text',
   standalone: true,
-  imports: [FormsModule, CommonModule, Usertable],
+  imports: [FormsModule, CommonModule, Usertable, FaIconComponent],
   templateUrl: './generate-text.html',
   styleUrls: ['./generate-text.scss'],
 })
@@ -23,6 +26,9 @@ export class GenerateText {
     text: '',
     error: null,
   });
+
+  readonly faSearchengin = faSearchengin;
+  readonly faWandMagicSparkles = faWandMagicSparkles;
 
   /**
    * Loading flag:

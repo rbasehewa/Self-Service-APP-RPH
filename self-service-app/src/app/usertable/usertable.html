@@ -1,10 +1,12 @@
-<div class="w-full bg-white shadow-md rounded-2xl p-6 space-y-4">
+<div class="w-full bg-white shadow-xl rounded-2xl p-6 md:p-8 space-y-4  md:h-[780px] flex flex-col">
 
   <!-- Header + status chips + text filter -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
     <h2 class="text-xl font-semibold text-slate-800">
-      Users Table
+      <fa-icon [icon]="faUsers" class="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500"></fa-icon>
+      Staff Directory
     </h2>
+                  
 
     <div class="flex flex-col md:flex-row md:items-center gap-2">
       <!-- Status chips -->
@@ -63,7 +65,7 @@
   </div>
 
   <!-- Table -->
-  <div class="overflow-x-auto">
+  <div class="overflow-auto flex-1">
     <table class="min-w-full text-left text-sm">
       <!-- YOUR THEAD (unchanged) -->
       <thead>
@@ -130,7 +132,7 @@
             </div>
           </th>
 
-          <!-- Phone (not sortable) -->
+          <!-- Phone -->
           <th class="px-4 py-2 font-semibold text-slate-700">
             Phone Number
           </th>
@@ -138,7 +140,7 @@
       </thead>
 
       <tbody>
-        <!-- ✅ SKELETON MODE: show while loading is true -->
+        <!-- SKELETON MODE: show while loading is true -->
         @if (loading()) {
         @for (row of [0,1,2,3,4]; track row) {
         <tr class="border-b border-slate-100 animate-pulse">
@@ -161,7 +163,7 @@
         }
         } @else {
         <!-- NORMAL DATA MODE -->
-        @for (user of filteredAndSortedUsers(); track user.id) {
+        @for (user of pagedUsers(); track user.id) {
         <tr class="border-b border-slate-100 hover:bg-slate-50">
           <td class="px-4 py-2 text-slate-600">
             {{ user.id }}
@@ -193,10 +195,7 @@
         @empty {
         <tr>
           <td colspan="5" class="px-4 py-4 text-center text-slate-500 text-sm">
-            No users to display yet. Run an LLM query like
-            <span class="italic">
-              "Give me all sorted users who is non immune"
-            </span>.
+            No users to display. Try a different filter or query.
           </td>
         </tr>
         }
@@ -204,5 +203,52 @@
       </tbody>
 
     </table>
+    <!-- Pagination footer -->
+    <div
+      class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
+      <!-- Left: range info -->
+      <div class="text-xs text-slate-500">
+        @let total = filteredAndSortedUsers().length;
+        @let page = currentPage();
+        @let start = (page - 1) * pageSize + 1;
+        <!-- use ternary -->
+        @let end = (page * pageSize) > total ? total : (page * pageSize);
+
+        @if (total === 0) {
+        <span>Showing 0 of 0 staff.</span>
+        } @else {
+        <span>Showing {{ start }}–{{ end }} of {{ total }} staff.</span>
+        }
+      </div>
+
+      <!-- Right: page controls -->
+      <div class="inline-flex items-center gap-1">
+        <button type="button" (click)="previousPage()" [disabled]="currentPage() === 1" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200
+             bg-white text-slate-600 hover:bg-slate-100
+             disabled:opacity-40 disabled:cursor-not-allowed">
+          Prev
+        </button>
+
+        @for (pageNumber of pages(); track pageNumber) {
+        <button type="button" (click)="goToPage(pageNumber)"
+          class="px-3 py-1.5 text-xs font-semibold rounded-lg border transition-colors" [ngClass]="{
+          'bg-indigo-600 text-white border-indigo-600 shadow-sm':
+            currentPage() === pageNumber,
+          'bg-white text-slate-600 border-slate-200 hover:bg-slate-100':
+            currentPage() !== pageNumber
+        }">
+          {{ pageNumber }}
+        </button>
+        }
+
+        <button type="button" (click)="nextPage()" [disabled]="currentPage() === totalPages()" class="px-3 py-1.5 text-xs font-medium rounded-lg border border-slate-200
+             bg-white text-slate-600 hover:bg-slate-100
+             disabled:opacity-40 disabled:cursor-not-allowed">
+          Next
+        </button>
+      </div>
+    </div>
+
+
   </div>
 </div>

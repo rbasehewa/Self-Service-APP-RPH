@@ -7,7 +7,7 @@ The goal is to explore how **AI can enhance normal UI workflows**.
 Example use case:
 
 > An immunisation nurse wants to filter staff data using natural language:
-> “Give me all non-immune users born after 1990.”
+> “Give me all non-immune staff born after 1990.”
 > Instead of writing filters manually, Gemini returns structured JSON results.
 
 You can also generate free text or HTML using prompts.

@@ -48,7 +48,7 @@ app.post('/generate', async (req, res) => {
 });
 
 // -----------------------------
-// Query Users (AI Filters JSON)
+// Query staff (AI Filters JSON)
 // -----------------------------
 app.post('/query-users', async (req, res) => {
   const { prompt, data } = req.body;
@@ -63,7 +63,7 @@ app.post('/query-users', async (req, res) => {
     const promptTemplate = `
 You are a **strict data filtering assistant**.
 
-You are given a JSON array called "users". 
+You are given a JSON array called "staff". 
 Each user object has these exact fields:
 - id (number)
 - name (string)
@@ -75,25 +75,25 @@ Each user object has these exact fields:
 VERY IMPORTANT RULES:
 - You MUST treat the JSON data as the single source of truth.
 - You MUST NOT invent, modify, or guess any values.
-- You MUST NOT create new users.
+- You MUST NOT create new staff.
 - You MUST NOT change immuneStatus, yearOfBirth or phoneNumber.
 - If the user asks for filters (e.g. "non immune", "after 1990", "older than 40"),
   you MUST apply ALL of those conditions exactly.
 
 Examples of correct behaviour:
 
-1) If the user says: "Give me non immune users born after 1990."
-   - Only return users where immuneStatus === "Non-Immune"
+1) If the user says: "Give me non immune staff born after 1990."
+   - Only return staff where immuneStatus === "Non-Immune"
      AND yearOfBirth > 1990.
 
-2) If the user says: "Show immune users with their vaccineDate and phoneNumber."
-   - Only return users where immuneStatus === "Immune".
+2) If the user says: "Show immune staff with their vaccineDate and phoneNumber."
+   - Only return staff where immuneStatus === "Immune".
    - You may keep the full objects, but they **must** come from the dataset.
 
 3) If the question is unrelated to this dataset (e.g. "What is a dog?")
    - Return an **empty array**: [].
 
-Here is the JSON dataset of users:
+Here is the JSON dataset of staff:
 
 ${jsonString}
 
@@ -122,9 +122,9 @@ Your job:
       return res.json({ raw: text });
     }
   } catch (error) {
-    console.error('Gemini query-users error:', error);
+    console.error('Gemini query-staff error:', error);
     return res.status(500).json({
-      error: 'Failed to query users.',
+      error: 'Failed to query staff.',
       details: error.message,
     });
   }

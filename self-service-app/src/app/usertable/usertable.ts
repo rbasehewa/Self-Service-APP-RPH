@@ -1,13 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, effect, input, signal } from '@angular/core';
-import { SAMPLE_USERS, User } from '../models/user.model';
+import { User } from '../models/user.model';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import {
-  faSort,
-  faSortUp,
-  faSortDown,
-} from '@fortawesome/free-solid-svg-icons';
+import { faSort, faSortUp, faSortDown, faUsers } from '@fortawesome/free-solid-svg-icons';
 
 type SortField = 'id' | 'name' | 'yearOfBirth' | 'immuneStatus';
 type SortDirection = 'asc' | 'desc';
@@ -15,12 +11,11 @@ type SortDirection = 'asc' | 'desc';
 @Component({
   selector: 'app-usertable',
   standalone: true,
-  imports: [CommonModule,FormsModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, FontAwesomeModule],
   templateUrl: './usertable.html',
   styleUrl: './usertable.scss',
 })
 export class Usertable {
-
   /**
    * users:
    *   - Receives data from the parent component using Angular Signals Input API.
@@ -28,7 +23,7 @@ export class Usertable {
    */
   users = input<User[]>([]);
 
-    /**
+  /**
    * loading:
    *   - When true, we show skeleton rows instead of data.
    *   - Parent (GenerateText) binds: [loading]="isQueryLoading()".
@@ -61,52 +56,74 @@ export class Usertable {
   sortDirection = signal<SortDirection>('asc');
 
   // FontAwesome sorting icons (UI-only)
-  readonly faSort = faSort;       // neutral icon
-  readonly faSortUp = faSortUp;   // ascending icon
+  readonly faSort = faSort; // neutral icon
+  readonly faSortUp = faSortUp; // ascending icon
   readonly faSortDown = faSortDown; // descending icon
+  readonly faUsers = faUsers; // descending icon
+
+  // ----------------------------
+  // Pagination state (15 per page)
+  // ----------------------------
+
+  /**
+   * pageSize:
+   *   - How many rows per page.
+   *   - Fixed at 15 for this demo, but could be made configurable later.
+   */
+  readonly pageSize = 15;
+
+  /**
+   * currentPage:
+   *   - 1-based page index (1, 2, 3, ...).
+   */
+  currentPage = signal(1);
 
   constructor() {
+    // React when parent updates user list (LLM result vs full set).
+    effect(() => {
+      const _data = this.users();
+      // If you want to reset filters on new dataset, you could do it here.
+    });
+
     /**
-     * effect():
-     *   - Reacts when parent updates the user list.
-     *   - Useful if you want to auto-reset filters when a new LLM response comes in.
-     *   - Currently no reset required, but kept for clarity.
+     * Ensure currentPage is always in a valid range when
+     * the filtered list size changes (e.g. new LLM result or filters).
      */
     effect(() => {
-      const currentUsers = this.users();
-      console.log('[Usertable] received users:', currentUsers.length);
+      const total = this.totalPages();
+      const page = this.currentPage();
+      if (page > total) {
+        this.currentPage.set(total);
+      }
+      if (page < 1) {
+        this.currentPage.set(1);
+      }
     });
   }
 
-  /**
-   * setSort():
-   *   - Handles all sorting behaviour.
-   *   - Clicking the same column toggles asc <-> desc.
-   *   - Clicking a DIFFERENT column resets direction to asc.
-   *
-   * This method is intentionally simple and reused everywhere.
-   */
+  // ----------------------------
+  // Sorting + filter handlers
+  // ----------------------------
+
   setSort(field: SortField) {
     if (this.sortField() === field) {
-      // Same column → toggle direction
-      this.sortDirection.set(
-        this.sortDirection() === 'asc' ? 'desc' : 'asc'
-      );
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
     } else {
-      // New column → reset to ascending
       this.sortField.set(field);
       this.sortDirection.set('asc');
     }
   }
 
-  /** Updates text filter */
   setFilterText(value: string) {
     this.filterText.set(value);
+    // When filters change, go back to page 1.
+    this.currentPage.set(1);
   }
 
-  /** Updates immune status filter chip */
   setStatusFilter(value: 'All' | 'Immune' | 'Non-Immune' | 'Unknown') {
     this.filterStatus.set(value);
+    // Reset to first page when user changes status filter.
+    this.currentPage.set(1);
   }
 
   /**
@@ -184,4 +201,46 @@ export class Usertable {
 
     return data;
   });
+
+  // ----------------------------
+  // Pagination derived values
+  // ----------------------------
+
+  /** Total number of pages for the current filtered list. */
+  readonly totalPages = computed(() => {
+    const total = this.filteredAndSortedUsers().length;
+    return total === 0 ? 1 : Math.ceil(total / this.pageSize);
+  });
+
+  /** Simple [1, 2, 3, ...] array for page buttons. */
+  readonly pages = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i + 1));
+
+  /**
+   * pagedUsers:
+   *   - This is what the template actually renders in @for.
+   *   - Takes the filtered + sorted list and slices out 15 rows.
+   */
+  readonly pagedUsers = computed(() => {
+    const page = this.currentPage();
+    const start = (page - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    return this.filteredAndSortedUsers().slice(start, end);
+  });
+
+  // ----------------------------
+  // Pagination actions
+  // ----------------------------
+
+  goToPage(page: number) {
+    const clamped = Math.min(Math.max(page, 1), this.totalPages());
+    this.currentPage.set(clamped);
+  }
+
+  nextPage() {
+    this.goToPage(this.currentPage() + 1);
+  }
+
+  previousPage() {
+    this.goToPage(this.currentPage() - 1);
+  }
 }
