@@ -6,7 +6,7 @@
 
     <!-- LEFT: Users table (takes 2/3 width on desktop) -->
     <div class="order-2 md:order-1 md:col-span-2">
-      <app-usertable [users]="tableUsers()" [loading]="isLoading()"></app-usertable>
+      <app-usertable [users]="tableUsers()" [loading]="isLoading()" [lastQuery]="lastQuery()"></app-usertable>
     </div>
 
     <!-- RIGHT: AI Text & Dataset Query -->

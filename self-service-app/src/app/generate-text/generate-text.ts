@@ -7,7 +7,7 @@ import { Usertable } from '../usertable/usertable';
 import { ExampleQuery } from '../models/example-query.model';
 import { EXAMPLE_QUERIES } from '../data/example-queries.data';
 import { faSearchengin } from '@fortawesome/free-brands-svg-icons';
-import { FaIconComponent } from "@fortawesome/angular-fontawesome";
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -30,6 +30,12 @@ export class GenerateText {
   readonly faSearchengin = faSearchengin;
   readonly faWandMagicSparkles = faWandMagicSparkles;
 
+  /** Has the user run at least one AI table query? */
+  hasLLMQuery = signal(false);
+
+  /** Remember the last AI query text (for empty-state message) */
+  lastQuery = signal('');
+
   /**
    * Loading flag:
    *  - true while we are calling /query-users OR doing fallback /generate
@@ -43,16 +49,17 @@ export class GenerateText {
    *  - non-empty → show whatever Gemini returned
    */
   llmUsers = signal<User[]>([]);
+
   // This is what your template's @for is using
   readonly exampleQueries: ExampleQuery[] = EXAMPLE_QUERIES;
-  // what the table should show:
-  // - before first LLM query → all SAMPLE_USERS
-  // - after LLM query       → whatever Gemini returned
-  // This decides what the table sees
+
+  /**
+   * Table data:
+   *  - Before ANY AI query → show SAMPLE_USERS
+   *  - After an AI query   → show whatever llmUsers() holds (even empty)
+   */
   readonly tableUsers = computed<User[]>(() => {
-    const llm = this.llmUsers();
-    // if LLM has results, use them
-    return llm.length > 0 ? llm : SAMPLE_USERS; // otherwise SAMPLE_USERS
+    return this.hasLLMQuery() ? this.llmUsers() : SAMPLE_USERS;
   });
 
   useExample(example: ExampleQuery) {
@@ -88,46 +95,54 @@ export class GenerateText {
    *      general Gemini answer by calling generateResponse().
    */
   queryUsersSmart() {
+    const currentPrompt = this.prompt().trim();
+
+    // store the query for the empty-state card
+    this.lastQuery.set(currentPrompt);
+
+    // flag that we are now in "AI mode"
+    this.hasLLMQuery.set(true);
+
+    // start loading
     this.isLoading.set(true);
+
+    // reset previous response
     this.generatedResponse.set({ text: 'Loading...', error: null });
 
-    this.#genAI.queryUsers(this.prompt(), SAMPLE_USERS).subscribe({
+    this.#genAI.queryUsers(currentPrompt, SAMPLE_USERS).subscribe({
       next: (res) => {
-        // case A: structured JSON array of users came back
-        if (res.result && res.result.length > 0) {
+        this.isLoading.set(false);
+
+        if (res.result && Array.isArray(res.result)) {
+          console.log('response:', res.result);
           this.llmUsers.set(res.result);
 
           this.generatedResponse.set({
             text: JSON.stringify(res.result, null, 2),
             error: null,
           });
+        } else {
+          // model didn’t give structured JSON → treat as “no matches”
+          this.llmUsers.set([]);
 
-          this.isLoading.set(false);
-          return;
-        }
-
-        // case B: no structured users → clear table result and fall back
-        this.llmUsers.set([]);
-
-        // If there was some raw text from Gemini, show it,
-        // but we still do a proper /generate call to handle “dog” etc.
-        if (res.raw) {
           this.generatedResponse.set({
-            text: res.raw,
+            text: res.raw ?? 'No structured result returned.',
             error: null,
           });
         }
-
-        // Fallback to normal AI answer (uses the same prompt)
-        this.generateResponse(); // generateResponse will turn off isLoading
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error querying users:', err);
+        this.isLoading.set(false);
+
+        // on hard error, go back to "no AI" mode
+        this.hasLLMQuery.set(false);
         this.llmUsers.set([]);
+
         this.generatedResponse.set({
           text: 'Something went wrong while querying users.',
           error: 'Error querying users',
         });
-        this.isLoading.set(false);
       },
     });
   }

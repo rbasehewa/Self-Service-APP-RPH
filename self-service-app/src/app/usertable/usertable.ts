@@ -23,6 +23,10 @@ export class Usertable {
    */
   users = input<User[]>([]);
 
+  
+  /** Last AI query text (used only for empty-state messaging) */
+  lastQuery = input<string>('');
+
   /**
    * loading:
    *   - When true, we show skeleton rows instead of data.

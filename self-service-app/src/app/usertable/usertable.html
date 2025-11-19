@@ -3,10 +3,11 @@
   <!-- Header + status chips + text filter -->
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
     <h2 class="text-xl font-semibold text-slate-800">
-      <fa-icon [icon]="faUsers" class="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500"></fa-icon>
+      <fa-icon [icon]="faUsers"
+        class="mt-1 inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500"></fa-icon>
       Staff Directory
     </h2>
-                  
+
 
     <div class="flex flex-col md:flex-row md:items-center gap-2">
       <!-- Status chips -->
@@ -194,11 +195,45 @@
         }
         @empty {
         <tr>
-          <td colspan="5" class="px-4 py-4 text-center text-slate-500 text-sm">
-            No users to display. Try a different filter or query.
+          <td colspan="5" class="px-4 py-8">
+            <div class="max-w-xl mx-auto rounded-2xl border border-dashed border-emerald-200
+             bg-emerald-50/60 px-6 py-6 text-center shadow-sm">
+              <div class="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full
+               bg-emerald-100 text-emerald-600">
+                <fa-icon [icon]="faUsers" class="text-lg"></fa-icon>
+              </div>
+
+              <h3 class="text-sm font-semibold text-slate-800 mb-1">
+                No matching staff found
+              </h3>
+
+              @let term = filterText() || lastQuery();
+
+              @if (term) {
+              <p class="text-xs text-slate-500 mb-2">
+                We couldn’t find anyone matching
+                <span class="font-semibold text-slate-700">
+                  “{{ term }}”
+                </span>.
+              </p>
+              }
+
+              <p class="text-xs text-slate-500 leading-relaxed">
+                Try searching using <span class="font-semibold">staff details</span> such as
+                <span class="font-semibold">name</span>,
+                <span class="font-semibold">phone number</span> or
+                <span class="font-semibold">year of birth</span>.
+                You can also ask the AI on the right, for example:
+                <span class="italic">
+                  “Show all non-immune staff born after 1990.”
+                </span>
+              </p>
+            </div>
           </td>
         </tr>
         }
+
+
         }
       </tbody>
 
