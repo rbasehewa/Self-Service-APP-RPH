@@ -16,45 +16,87 @@ You can also generate free text or HTML using prompts.
 
 ---
 
-## 🏗️ Architecture (Simple Diagram)
+## 🏗️ Architecture
 
+### Full Stack Architecture
+
+```
 Angular App (UI + Signals)
         │
-        ▼
- Node/Express Proxy (server.js)
-  • No business logic
-  • Only hides the API key
-        │
-        ▼
- Google Gemini API
+        ├─────────────────────┐
+        │                     │
+        ▼                     ▼
+Node/Express Proxy      .NET Core API
+(Gemini AI)             (PostgreSQL)
+  • Hides API key         • User CRUD
+  • No logic              • EF Core
+        │                     │
+        ▼                     ▼
+Google Gemini API       PostgreSQL DB
+```
+
+### Two Backends
+
+1. **Node/Express Proxy** (`server.js`)
+   - Secures Google Gemini API key
+   - No business logic
+   - Handles AI requests only
+
+2. **.NET Core Web API** (`Backend/StaffServiceAPI`)
+   - Full REST API with PostgreSQL
+   - User management (CRUD operations)
+   - Entity Framework Core
+   - For learning backend concepts
 
 #### Flow
 
-Angular → Node Proxy → Gemini → Node Proxy → Angular UI
+- **AI Features**: Angular → Node Proxy → Gemini → Angular
+- **User Data**: Angular → .NET API → PostgreSQL → Angular
 
 ---
 
 ## ▶️ How to Run
 
-1. Install dependencies
+### Prerequisites
 
-`npm install`
+- Node.js and npm
+- .NET 9 SDK
+- PostgreSQL (for the .NET backend)
 
-2. Run Angular
+### Quick Start
 
-`ng serve`
+1. **Install Angular dependencies**
+   ```bash
+   npm install
+   ```
 
-3. Run backend server
+2. **Run Angular frontend**
+   ```bash
+   ng serve
+   ```
+   Runs on: `http://localhost:4200`
 
-`node server.js`
+3. **Run Node/Express proxy** (for Gemini AI features)
+   ```bash
+   node server.js
+   ```
+   Runs on: `http://localhost:3000`
 
-- 3.1. Server runs on:
+4. **Run .NET Core backend** (for user data)
+   ```bash
+   cd Backend/StaffServiceAPI
+   dotnet run
+   ```
+   Runs on: `http://localhost:5107`
 
-  `http://localhost:3000`
+   See [Backend/README.md](Backend/README.md) for detailed setup instructions.
 
-- 3.2. Angular runs on::
+### Running Both Backends
 
-  `http://localhost:4200`
+You'll need **3 terminal windows**:
+- Terminal 1: `ng serve` (Angular)
+- Terminal 2: `node server.js` (Gemini proxy)
+- Terminal 3: `cd Backend/StaffServiceAPI && dotnet run` (.NET API)
 
 ---
 
@@ -91,3 +133,49 @@ The proxy:
  - Returns the response to Angular
 
 It only protects the API key — it is NOT a backend application.
+
+---
+
+## 🗄️ .NET Core Backend (New!)
+
+This project now includes a **full-stack .NET Core backend** with PostgreSQL for learning purposes.
+
+### Features
+
+- ✅ ASP.NET Core Web API (.NET 9)
+- ✅ PostgreSQL database with Entity Framework Core
+- ✅ CRUD operations for user management
+- ✅ Database migrations and seeding (100 sample users)
+- ✅ Comprehensive error handling and logging
+- ✅ CORS configured for Angular frontend
+
+### API Endpoints
+
+- `GET /api/users` - Get all users
+- `GET /api/users/{id}` - Get user by ID
+- `GET /api/users/immune-status/{status}` - Filter by immune status
+- `POST /api/users` - Create new user
+- `PUT /api/users/{id}` - Update user
+- `DELETE /api/users/{id}` - Delete user
+
+### Setup
+
+See the complete setup guide in [Backend/README.md](Backend/README.md)
+
+**Quick setup:**
+```bash
+cd Backend/StaffServiceAPI
+dotnet run
+```
+
+The API will automatically:
+- Create the PostgreSQL database
+- Apply migrations
+- Seed 100 sample users
+
+### Database
+
+View your data in pgAdmin:
+1. Open pgAdmin
+2. Navigate to: **Databases** → **StaffServiceDB** → **Tables** → **Users**
+3. Right-click **Users** → **View/Edit Data** → **All Rows**

@@ -46,3 +46,14 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# .NET
+Backend/StaffServiceAPI/bin/
+Backend/StaffServiceAPI/obj/
+*.dll
+*.exe
+*.pdb
+
+# Temporary files
+tmpclaude-*
+nul
