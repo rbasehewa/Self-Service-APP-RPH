@@ -4,10 +4,16 @@
 
 The goal is to explore how **AI can enhance normal UI workflows**.
 
+This project demonstrates:
+- **Natural language data filtering**: Use Gemini AI to filter staff data with plain English queries
+- **Smart table management**: AI-powered insights and analysis of staff data
+- **Full-stack integration**: Angular frontend with dual backend architecture (.NET + Node.js)
+- **Modern Angular patterns**: Signals, standalone components, and reactive programming
+
 Example use case:
 
 > An immunisation nurse wants to filter staff data using natural language:
-> “Give me all non-immune staff born after 1990.”
+> "Give me all non-immune staff born after 1990."
 > Instead of writing filters manually, Gemini returns structured JSON results.
 
 You can also generate free text or HTML using prompts.
@@ -41,11 +47,13 @@ Google Gemini API       PostgreSQL DB
    - Secures Google Gemini API key
    - No business logic
    - Handles AI requests only
+   - Processes natural language queries
 
 2. **.NET Core Web API** (`Backend/StaffServiceAPI`)
    - Full REST API with PostgreSQL
-   - User management (CRUD operations)
-   - Entity Framework Core
+   - Staff data management (CRUD operations)
+   - Entity Framework Core with migrations
+   - Comprehensive error handling and logging
    - For learning backend concepts
 
 #### Flow
@@ -100,11 +108,11 @@ You'll need **3 terminal windows**:
 
 ---
 
-## 🔐 Important Note — Why We Use Node/Express
+## 🔐 Important Note — Why We Use Node/Express Proxy
 
-This project does NOT have a real backend.
+The Node/Express server acts as a secure proxy for the Gemini AI API.
 
-We only use a tiny Node/Express server.js file because:
+We use a tiny Node/Express server.js file because:
 
 ❗ You must NEVER expose an API key in Angular
 
@@ -132,31 +140,33 @@ The proxy:
 
  - Returns the response to Angular
 
-It only protects the API key — it is NOT a backend application.
+It only protects the API key — the actual business logic and data is handled by the .NET Core backend.
 
 ---
 
-## 🗄️ .NET Core Backend (New!)
+## 🗄️ .NET Core Backend
 
-This project now includes a **full-stack .NET Core backend** with PostgreSQL for learning purposes.
+This project includes a **full-stack .NET Core backend** with PostgreSQL for staff data management.
 
 ### Features
 
 - ✅ ASP.NET Core Web API (.NET 9)
 - ✅ PostgreSQL database with Entity Framework Core
-- ✅ CRUD operations for user management
-- ✅ Database migrations and seeding (100 sample users)
+- ✅ Complete staff data management (CRUD operations)
+- ✅ Database migrations and seeding (100 sample staff records)
 - ✅ Comprehensive error handling and logging
 - ✅ CORS configured for Angular frontend
+- ✅ RESTful API design with proper HTTP status codes
 
 ### API Endpoints
 
-- `GET /api/users` - Get all users
-- `GET /api/users/{id}` - Get user by ID
-- `GET /api/users/immune-status/{status}` - Filter by immune status
-- `POST /api/users` - Create new user
-- `PUT /api/users/{id}` - Update user
-- `DELETE /api/users/{id}` - Delete user
+**Staff Management:**
+- `GET /api/staff` - Get all staff members
+- `GET /api/staff/{id}` - Get staff by ID
+- `GET /api/staff/immune-status/{status}` - Filter by immune status
+- `POST /api/staff` - Create new staff member
+- `PUT /api/staff/{id}` - Update staff member
+- `DELETE /api/staff/{id}` - Delete staff member
 
 ### Setup
 
@@ -171,11 +181,81 @@ dotnet run
 The API will automatically:
 - Create the PostgreSQL database
 - Apply migrations
-- Seed 100 sample users
+- Seed 100 sample staff members with realistic data
 
 ### Database
 
 View your data in pgAdmin:
 1. Open pgAdmin
-2. Navigate to: **Databases** → **StaffServiceDB** → **Tables** → **Users**
-3. Right-click **Users** → **View/Edit Data** → **All Rows**
+2. Navigate to: **Databases** → **StaffServiceDB** → **Tables** → **Staff**
+3. Right-click **Staff** → **View/Edit Data** → **All Rows**
+
+---
+
+## 🎨 Frontend Features
+
+### Staff Table Component
+- **Real-time data loading** from .NET backend
+- **AI-powered filtering** with natural language queries
+- **Edit mode** with inline form validation
+- **Sorting** by any column
+- **Pagination** for large datasets
+- **Immune status indicators** with color-coded badges
+- **Responsive design** with modern UI
+
+### Technologies Used
+- Angular 19 with standalone components
+- Signals for reactive state management
+- Material Design styling
+- TypeScript with strict type checking
+- RxJS for async operations
+
+---
+
+## 🤖 AI Integration
+
+### How It Works
+
+1. User enters a natural language query (e.g., "Show me all non-immune staff")
+2. Angular sends the query to Node/Express proxy
+3. Proxy forwards to Gemini AI with context about the data structure
+4. Gemini returns structured filter criteria
+5. Angular applies filters to the staff table
+
+### Example Queries
+
+- "Show me all non-immune staff"
+- "Find staff members born after 1990"
+- "List immune staff in the cardiology department"
+- "Show female staff who are non-immune"
+
+---
+
+## 📁 Project Structure
+
+```
+self-service-app/
+├── src/
+│   ├── app/
+│   │   ├── components/
+│   │   │   └── staff-table/          # Main staff table component
+│   │   ├── models/
+│   │   │   └── staff.model.ts        # Staff data model
+│   │   ├── services/
+│   │   │   ├── staff.service.ts      # Backend communication
+│   │   │   └── ai.service.ts         # Gemini AI integration
+│   │   └── app.component.ts          # Root component
+│   └── environments/                  # Environment configs
+├── Backend/
+│   └── StaffServiceAPI/
+│       ├── Controllers/
+│       │   └── StaffController.cs    # API endpoints
+│       ├── Data/
+│       │   ├── AppDbContext.cs       # EF Core context
+│       │   └── DataSeeder.cs         # Sample data generator
+│       ├── Models/
+│       │   └── Staff.cs              # Staff entity model
+│       └── Program.cs                # API configuration
+├── server.js                          # Gemini AI proxy
+└── README.md
+```
