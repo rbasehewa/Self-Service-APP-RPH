@@ -231,6 +231,15 @@ View your data in pgAdmin:
 
 ---
 
+## 🚀 CI/CD Pipeline
+
+This project uses **GitHub Actions** for automated testing and continuous integration.
+
+## Setup CI/CD
+
+**Create the workflow file:**
+```bash
+
 ## 📁 Project Structure
 
 ```

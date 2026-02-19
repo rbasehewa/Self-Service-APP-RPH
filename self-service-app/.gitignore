@@ -50,9 +50,13 @@ Thumbs.db
 # .NET
 Backend/StaffServiceAPI/bin/
 Backend/StaffServiceAPI/obj/
+Backend/StaffServiceAPI.Tests/bin/      
+Backend/StaffServiceAPI.Tests/obj/      
 *.dll
 *.exe
 *.pdb
+*.cache                              
+*.user                                 
 
 # Temporary files
 tmpclaude-*
