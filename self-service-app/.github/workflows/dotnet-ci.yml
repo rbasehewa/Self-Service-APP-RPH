@@ -1,0 +1,43 @@
+name: .NET CI/CD Pipeline
+
+# When to run: on push to main or pull requests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Step 1: Get code from GitHub
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    # Step 2: Install .NET
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: '9.0.x'
+    
+    # Step 3: Restore packages
+    - name: Restore dependencies
+      run: dotnet restore Backend/StaffServiceAPI/StaffServiceAPI.csproj
+    
+    # Step 4: Build the project
+    - name: Build
+      run: dotnet build Backend/StaffServiceAPI/StaffServiceAPI.csproj --configuration Release --no-restore
+    
+    # Step 5: Run unit tests
+    - name: Run tests
+      run: dotnet test Backend/StaffServiceAPI.Tests/StaffServiceAPI.Tests.csproj --no-build --verbosity normal
+    
+    # Step 6: Show summary
+    - name: Build Summary
+      if: always()
+      run: |
+        echo "✅ Build completed!"
+        echo "📊 Check test results above"
+        echo "🚀 Ready for deployment"
